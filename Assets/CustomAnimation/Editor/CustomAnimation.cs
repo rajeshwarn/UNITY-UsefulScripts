@@ -24,23 +24,31 @@ public class LevelScriptEditor : Editor
             foreach (PolygonCollider2D pc in myTarget.gameObject.GetComponents<PolygonCollider2D>())
                 Object.DestroyImmediate(pc);
 
-            for(int i = 0; i < myTarget.animationFrames.Length; i++)
+            myTarget.animationColliders = new PolygonCollider2D[myTarget.animationFrames.Length];
+
+            for (int i = 0; i < myTarget.animationFrames.Length; i++)
             {
-                
 
                 PolygonCollider2D newCollider = myTarget.gameObject.AddComponent<PolygonCollider2D>();
                 List<Vector2> newPoints = new List<Vector2>();
 
-                for (int j = 0; j < myTarget.animationFrames[i].texture.height - 1; j++)
+                for (int y = -1; y < myTarget.animationFrames[i].texture.height; y++)
                 {
-                    for (int k = 0; k < myTarget.animationFrames[i].texture.width - 1; k++)
+                    for (int x = -1; x < myTarget.animationFrames[i].texture.width; x++)
                     {
-                        Color totalColor = new Color();
-                        foreach (Color color in myTarget.animationFrames[i].texture.GetPixels(j, k, 2, 2))
-                            totalColor += color;
+                        int coloredPixels = 0;
 
-                        if (totalColor.a == 0)
-                            newPoints.Add(new Vector2(j + 1, k + 1));
+                        if (myTarget.animationFrames[i].texture.GetPixel(x, y).a != 0)
+                            coloredPixels++;
+                        if (myTarget.animationFrames[i].texture.GetPixel(x + 1, y).a != 0)
+                            coloredPixels++;
+                        if (myTarget.animationFrames[i].texture.GetPixel(x, y + 1).a != 0)
+                            coloredPixels++;
+                        if (myTarget.animationFrames[i].texture.GetPixel(x + 1, y + 1).a != 0)
+                            coloredPixels++;
+
+                        if (coloredPixels == 1 || coloredPixels == 3)
+                            newPoints.Add(new Vector2(myTarget.animationFrames[i].textureRectOffset.x + x + 1, myTarget.animationFrames[i].textureRectOffset.y + y + 1) / myTarget.animationFrames[i].pixelsPerUnit);
                     }
                 }
 
@@ -48,5 +56,17 @@ public class LevelScriptEditor : Editor
                 myTarget.animationColliders[i] = newCollider;
             }
         }
+
+        if (GUI.changed)
+        {
+            if (GUI.changed)
+            {
+                EditorUtility.SetDirty(myTarget);
+            }
+        }
+
+        serializedObject.Update();
     }
+    
+
 }
