@@ -15,8 +15,8 @@ public class LevelScriptEditor : Editor
 
         debugMode = EditorGUILayout.Toggle("Debug Mode", debugMode);
 
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("animationFrames"), true);
         if (debugMode) EditorGUILayout.PropertyField(serializedObject.FindProperty("animationColliders"), true);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("animationFrames"), true);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("secondsPerFrame"), true);
 
         if (GUILayout.Button("Generate/Update PolygonCollider2D for each frame."))
@@ -28,27 +28,29 @@ public class LevelScriptEditor : Editor
 
             for (int i = 0; i < myTarget.animationFrames.Length; i++)
             {
-
                 PolygonCollider2D newCollider = myTarget.gameObject.AddComponent<PolygonCollider2D>();
                 List<Vector2> newPoints = new List<Vector2>();
 
-                for (int y = -1; y < myTarget.animationFrames[i].texture.height; y++)
+                int xOffset = Mathf.RoundToInt(myTarget.animationFrames[i].rect.xMin);
+                int yOffset = Mathf.RoundToInt(myTarget.animationFrames[i].rect.yMin);
+
+                for (int y = -1; y < myTarget.animationFrames[i].rect.height + 1; y++)
                 {
-                    for (int x = -1; x < myTarget.animationFrames[i].texture.width; x++)
+                    for (int x = -1; x < myTarget.animationFrames[i].rect.width + 1; x++)
                     {
                         int coloredPixels = 0;
 
-                        if (myTarget.animationFrames[i].texture.GetPixel(x, y).a != 0)
+                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x, yOffset + y).a != 0)
                             coloredPixels++;
-                        if (myTarget.animationFrames[i].texture.GetPixel(x + 1, y).a != 0)
+                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x + 1, yOffset + y).a != 0)
                             coloredPixels++;
-                        if (myTarget.animationFrames[i].texture.GetPixel(x, y + 1).a != 0)
+                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x, yOffset + y + 1).a != 0)
                             coloredPixels++;
-                        if (myTarget.animationFrames[i].texture.GetPixel(x + 1, y + 1).a != 0)
+                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x + 1, yOffset + y + 1).a != 0)
                             coloredPixels++;
 
                         if (coloredPixels == 1 || coloredPixels == 3)
-                            newPoints.Add(new Vector2(myTarget.animationFrames[i].textureRectOffset.x + x + 1, myTarget.animationFrames[i].textureRectOffset.y + y + 1) / myTarget.animationFrames[i].pixelsPerUnit);
+                            newPoints.Add(new Vector2(x - myTarget.animationFrames[i].pivot.x + 1, y - myTarget.animationFrames[i].pivot.y + 1) / myTarget.animationFrames[i].pixelsPerUnit);
                     }
                 }
 
@@ -67,6 +69,4 @@ public class LevelScriptEditor : Editor
 
         serializedObject.Update();
     }
-    
-
 }
