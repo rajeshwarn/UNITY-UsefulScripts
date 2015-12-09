@@ -28,8 +28,8 @@ public class LevelScriptEditor : Editor
 
             for (int i = 0; i < myTarget.animationFrames.Length; i++)
             {
-                PolygonCollider2D newCollider = myTarget.gameObject.AddComponent<PolygonCollider2D>();
-                List<Vector2> newPoints = new List<Vector2>();
+                PolygonCollider2D collider = myTarget.gameObject.AddComponent<PolygonCollider2D>();
+                List<Vector2> points = new List<Vector2>();
 
                 int xOffset = Mathf.RoundToInt(myTarget.animationFrames[i].rect.xMin);
                 int yOffset = Mathf.RoundToInt(myTarget.animationFrames[i].rect.yMin);
@@ -40,31 +40,60 @@ public class LevelScriptEditor : Editor
                     {
                         int coloredPixels = 0;
 
-                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x, yOffset + y).a != 0)
-                            coloredPixels++;
-                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x + 1, yOffset + y).a != 0)
-                            coloredPixels++;
-                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x, yOffset + y + 1).a != 0)
-                            coloredPixels++;
-                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x + 1, yOffset + y + 1).a != 0)
+                        if (myTarget.animationFrames[i].texture.GetPixel(xOffset + x, yOffset + y).a != 0 ||
+                            myTarget.animationFrames[i].texture.GetPixel(xOffset + x + 1, yOffset + y).a != 0 ||
+                            myTarget.animationFrames[i].texture.GetPixel(xOffset + x, yOffset + y + 1).a != 0 ||
+                            myTarget.animationFrames[i].texture.GetPixel(xOffset + x + 1, yOffset + y + 1).a != 0)
                             coloredPixels++;
 
                         if (coloredPixels == 1 || coloredPixels == 3)
-                            newPoints.Add(new Vector2(x - myTarget.animationFrames[i].pivot.x + 1, y - myTarget.animationFrames[i].pivot.y + 1) / myTarget.animationFrames[i].pixelsPerUnit);
+                            points.Add(new Vector2(x - myTarget.animationFrames[i].pivot.x + 1, y - myTarget.animationFrames[i].pivot.y + 1) / myTarget.animationFrames[i].pixelsPerUnit);
                     }
                 }
 
-                newCollider.points = newPoints.ToArray();
-                myTarget.animationColliders[i] = newCollider;
+
+                List<Vector2> newPoints = new List<Vector2>();
+                newPoints.Add(points[0]);
+                points.RemoveAt(0);
+                points.Add(newPoints[0]);
+
+                int lastCount = 0;
+
+                while (points.Count > 0)
+                {
+                    if (lastCount == points.Count)
+                    {
+                        Debug.Log("Error.");
+                        throw new System.Exception("Infinite Loop at " + newPoints[newPoints.Count - 1] + ". Points left: " + points.Count);
+                    }
+                    else
+                    {
+                        lastCount = points.Count;
+                    }
+
+                    points.Sort((v1, v2) => Vector2.Distance(v1, newPoints[newPoints.Count - 1]).CompareTo(Vector2.Distance(v2, newPoints[newPoints.Count - 1])));
+
+                    for (int startIndex = 0; startIndex < points.Count; startIndex++)
+                    {
+                        if (newPoints[newPoints.Count - 1].x == points[startIndex].x ||
+                            newPoints[newPoints.Count - 1].y == points[startIndex].y)
+                        {
+
+                            Debug.Log(myTarget.animationFrames[i].texture.GetPixel(xOffset + Mathf.RoundToInt(points[startIndex].x) + 1, yOffset + Mathf.RoundToInt(points[startIndex].y)).a != 0);
+                            newPoints.Add(points[startIndex]);
+                            points.RemoveAt(startIndex);
+                        }
+                    }
+                }
+
+                collider.points = newPoints.ToArray();
+                myTarget.animationColliders[i] = collider;
             }
         }
 
         if (GUI.changed)
         {
-            if (GUI.changed)
-            {
-                EditorUtility.SetDirty(myTarget);
-            }
+            EditorUtility.SetDirty(myTarget);
         }
 
         serializedObject.Update();
