@@ -78,8 +78,6 @@ public class LevelScriptEditor : Editor
                         if (newPoints[newPoints.Count - 1].x == points[startIndex].x ||
                             newPoints[newPoints.Count - 1].y == points[startIndex].y)
                         {
-
-                            Debug.Log(myTarget.animationFrames[i].texture.GetPixel(xOffset + Mathf.RoundToInt(points[startIndex].x) + 1, yOffset + Mathf.RoundToInt(points[startIndex].y)).a != 0);
                             newPoints.Add(points[startIndex]);
                             points.RemoveAt(startIndex);
                         }
@@ -90,12 +88,69 @@ public class LevelScriptEditor : Editor
                 myTarget.animationColliders[i] = collider;
             }
         }
+    }
 
-        if (GUI.changed)
-        {
-            EditorUtility.SetDirty(myTarget);
+    bool isValidMove(Vector2 fromPosition, Vector2 toPosition, Sprite sprite)
+    {
+        int xOffset = Mathf.RoundToInt(sprite.rect.xMin);
+        int yOffset = Mathf.RoundToInt(sprite.rect.yMin);
+
+        int width = Mathf.RoundToInt(sprite.rect.width);
+        int height = Mathf.RoundToInt(sprite.rect.height);
+
+        int movementLength = Mathf.RoundToInt(Vector2.Distance(fromPosition, toPosition));
+
+        int fromX = Mathf.RoundToInt(fromPosition.x);
+        int fromY = Mathf.RoundToInt(fromPosition.x);
+        int toX = Mathf.RoundToInt(toPosition.x);
+        int toY = Mathf.RoundToInt(toPosition.x);
+
+        if (fromPosition.x == toPosition.x)
+        {//Horizontal Movement
+            if (fromPosition.y > toPosition.y)
+            {//Left
+                for (int i = 0; i < movementLength; i++)
+                {
+                    if ((sprite.texture.GetPixel(xOffset + fromX, yOffset + fromY + i).a == 0) == (sprite.texture.GetPixel(xOffset + fromX, yOffset + fromY + i).a == 0))
+                    {
+                        return false;
+                    }
+                }
+            }
+            else if (fromPosition.y < toPosition.y)
+            {//Right
+                for (int i = 0; i < movementLength; i++)
+                {
+                    if ((sprite.texture.GetPixel(xOffset + fromX, yOffset + fromY + i).a == 0) == (sprite.texture.GetPixel(xOffset + fromX, yOffset + fromY + i).a == 0))
+                    {
+                        return false;
+                    }
+                }
+            }
         }
-
-        serializedObject.Update();
+        else if (fromPosition.y == toPosition.y)
+        {//Vertical Movement
+            if (fromPosition.x > toPosition.x)
+            {//Up
+                for (int i = 0; i < movementLength; i++)
+                {
+                    if ((sprite.texture.GetPixel(xOffset + fromX, yOffset + fromY + i).a == 0) == (sprite.texture.GetPixel(xOffset + fromX, yOffset + fromY + i).a == 0))
+                    {
+                        return false;
+                    }
+                }
+            }
+            else if (fromPosition.x < toPosition.x)
+            {//Down
+                for (int i = 0; i < movementLength; i++)
+                {
+                    if ((sprite.texture.GetPixel(xOffset + fromX, yOffset + fromY + i).a == 0) == (sprite.texture.GetPixel(xOffset + fromX, yOffset + fromY + i).a == 0))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 }
